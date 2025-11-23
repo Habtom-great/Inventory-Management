@@ -1,0 +1,14 @@
+<!-- inventory/templates/inventory/stock_list.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Stock List</h1>
+
+<ul>
+  {% for stock in object_list %}
+    <li>{{ stock.name }} - {{ stock.quantity }}</li>
+  {% empty %}
+    <li>No stock items found.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

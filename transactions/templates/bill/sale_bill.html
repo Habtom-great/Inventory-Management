@@ -1,0 +1,144 @@
+{% extends bill_base %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Sale Bill No: {{ bill.billno }}{% endblock title %}
+
+{% block content %}
+<div style="color:#333; font-weight:bold; font-size:1.8rem; border-bottom:1px solid #555; margin-bottom:10px; padding-bottom:5px; text-align:center;">
+    Sale Bill No: {{ bill.billno }}
+</div>
+
+<form method="post">
+{% csrf_token %}
+<div id="printArea" style="padding:10px; background:#fff; border-radius:5px; font-size:0.85rem;">
+
+    <!-- Header -->
+    <table style="width:100%; margin:auto; text-align:center; margin-bottom:10px;">
+        <tr>
+            <td>
+                <span style="font-size:2rem; font-weight:900; color:#0d6efd;">GITC</span><br>
+                <span style="font-weight:bold;">DEALERS IN: Products</span><br>
+                REGD ADDRESS: 971 Center Street, Umatilla, OR 97882<br>
+                EMAIL: djangoims@mail.com
+            </td>
+        </tr>
+        <tr>
+            <td style="font-weight:bold; font-size:1rem; margin-top:5px;">TAX INVOICE - SALE</td>
+        </tr>
+    </table>
+
+    <!-- Buyer Info -->
+    <table style="width:100%; border-collapse:collapse; margin-bottom:10px;" border="1">
+        <tr style="background:#e9ecef; font-weight:bold;">
+            <td style="width:50%; padding:4px;">BUYER</td>
+            <td style="width:25%; padding:4px;">INVOICE NO</td>
+            <td style="width:25%; padding:4px;">{{ bill.billno }}</td>
+        </tr>
+        <tr>
+            <td style="padding:4px;">{{ bill.name }}</td>
+            <td style="font-weight:bold; padding:4px;">DATE</td>
+            <td style="padding:4px;">{{ bill.time.date }}</td>
+        </tr>
+        <tr>
+            <td rowspan="3" style="padding:4px;">{{ bill.address|linebreaks }}</td>
+            <td style="font-weight:bold; padding:4px;">EWAY NO</td>
+            <td><input type="text" name="eway" value="{{ billdetails.eway|default:'' }}" style="border:0; width:100%; font-size:0.85rem;"></td>
+        </tr>
+        <tr>
+            <td style="font-weight:bold; padding:4px;">VEH NO</td>
+            <td><input type="text" name="veh" value="{{ billdetails.veh|default:'' }}" style="border:0; width:100%; font-size:0.85rem;"></td>
+        </tr>
+        <tr>
+            <td style="font-weight:bold; padding:4px;">DESTINATION</td>
+            <td><input type="text" name="destination" value="{{ billdetails.destination|default:'' }}" style="border:0; width:100%; font-size:0.85rem;"></td>
+        </tr>
+    </table>
+
+    <!-- Items Table -->
+    <table style="width:100%; border-collapse:collapse; margin-bottom:10px;" border="1">
+        <tr style="background:#0d6efd; color:#fff; font-weight:bold; text-align:center;">
+            <td>SL</td>
+            <td>Description</td>
+            <td>UOM</td>
+            <td>QTY</td>
+            <td>Unit Price</td>
+            <td>Total</td>
+        </tr>
+        {% for item in items %}
+        <tr style="text-align:center;">
+            <td>{{ forloop.counter }}</td>
+            <td>{{ item.stock.name }}</td>
+            <td>{{ item.uom|default:"pcs" }}</td>
+            <td>{{ item.quantity|floatformat:2|intcomma }}</td>
+            <td>{{ item.perprice|floatformat:2|intcomma }}</td>
+            <td>{{ item.totalprice|floatformat:2|intcomma }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <!-- Summary Table -->
+   <!-- Summary Table (Compact Width) -->
+<table style="width:400px; margin:auto; border-collapse:collapse; font-size:0.85rem;" border="1">
+    <tr>
+        <td style="width:60%; font-weight:bold; text-align:right; padding:4px;">Subtotal</td>
+        <td style="width:40%; text-align:right; padding:4px;">{{ subtotal|floatformat:2|intcomma }}</td>
+    </tr>
+    <tr>
+        <td style="font-weight:bold; text-align:right; padding:4px;">VAT @ 15%</td>
+        <td style="text-align:right; padding:4px;">{{ vat|floatformat:2|intcomma }}</td>
+    </tr>
+    <tr>
+        <td style="font-weight:bold; text-align:right; padding:4px;">Total after VAT</td>
+        <td style="text-align:right; padding:4px;">{{ total_after_vat|floatformat:2|intcomma }}</td>
+    </tr>
+    <tr>
+        <td style="font-weight:bold; text-align:right; padding:4px;">Withholding Tax 3%</td>
+        <td style="text-align:right; padding:4px;">{{ withhold|floatformat:2|intcomma }}</td>
+    </tr>
+    <tr>
+        <td style="font-weight:bold; text-align:right; padding:4px;">Net Payable</td>
+        <td style="text-align:right; padding:4px;">{{ net_payable|floatformat:2|intcomma }}</td>
+    </tr>
+</table>
+
+<p style="font-weight:bold; text-align:right; font-size:0.85rem;">Amount in Words: {{ net_in_words }}</p>
+
+    <!-- Signatures -->
+    <table style="width:100%; margin-top:10px; font-size:0.85rem;">
+        <tr>
+            <td style="width:33%; text-align:center;">
+                <strong>Prepared By</strong><br>___________________<br>
+                Name: {{ billdetails.prepared_by|default:"________________" }}
+            </td>
+            <td style="width:33%; text-align:center;">
+                <strong>Checked By</strong><br>___________________<br>
+                Name: {{ billdetails.checked_by|default:"________________" }}
+            </td>
+            <td style="width:33%; text-align:center;">
+                <strong>Authorized Signatory</strong><br>___________________<br>
+                Name: {{ billdetails.authorized_by|default:"________________" }}
+            </td>
+        </tr>
+    </table>
+
+    <div style="text-align:center; margin-top:10px;">
+        <button class="btn btn-primary btn-sm" onclick="printpage('printArea'); return false;" style="margin-right:5px;">Print</button>
+        <button class="btn btn-success btn-sm" type="submit" style="margin-right:5px;">Save Draft</button>
+        <a href="{% url 'sales-list' %}" class="btn btn-secondary btn-sm">Go Back</a>
+    </div>
+
+</div>
+</form>
+
+<script>
+function printpage(divName) {
+    var printContents = document.getElementById(divName).innerHTML;
+    var originalContents = document.body.innerHTML;
+    document.body.innerHTML = printContents;
+    window.print();
+    document.body.innerHTML = originalContents;
+}
+</script>
+
+{% endblock %}

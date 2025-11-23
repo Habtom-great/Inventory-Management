@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="report-header mb-4 text-center">
+        <h2 class="fw-bold">📦 Stock Management</h2>
+        <p class="text-light">Add new stock entry and manage supplier details</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-header bg-primary text-white text-center py-2">
+                    <h4 class="mb-0">Add Stock Entry</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form id="stockForm" method="post" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Supplier Details -->
+                        <h5 class="text-primary mb-3">Supplier Information</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Supplier ID</label>
+                                <input type="text" class="form-control" name="supplier_id" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Supplier Name</label>
+                                <input type="text" class="form-control" name="supplier_name" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Telephone</label>
+                                <input type="text" class="form-control" name="supplier_tel">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Address</label>
+                            <textarea class="form-control" name="supplier_address" rows="2"></textarea>
+                        </div>
+
+                        <hr>
+
+                        <!-- Order & Invoice Details -->
+                        <h5 class="text-primary mb-3">Order & Invoice Information</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Order No.</label>
+                                <input type="text" class="form-control" name="order_no" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Invoice No.</label>
+                                <input type="text" class="form-control" name="invoice_no" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Reference</label>
+                                <input type="text" class="form-control" name="reference">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Date</label>
+                                <input type="date" class="form-control" name="date" required>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Stock Details -->
+                        <h5 class="text-primary mb-3">Stock Information</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Account Code</label>
+                                <input type="text" class="form-control" name="acc_code" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">UOM</label>
+                                <input type="text" class="form-control" name="uom" placeholder="e.g., pcs, kg">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Description</label>
+                                <input type="text" class="form-control" name="description">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Unit Cost</label>
+                                <input type="number" step="0.01" class="form-control" id="unit_cost" name="unit_cost" oninput="calculateTotals()">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Quantity</label>
+                                <input type="number" class="form-control" id="qty" name="qty" oninput="calculateTotals()">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Total Before VAT</label>
+                                <input type="text" class="form-control" id="total_before_vat" name="total_before_vat" readonly>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">VAT (15%)</label>
+                                <input type="text" class="form-control" id="vat" name="vat" readonly>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Total After VAT</label>
+                                <input type="text" class="form-control" id="total_after_vat" name="total_after_vat" readonly>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between">
+                            <!-- Add Stock Button -->
+                            <button type="submit" class="btn btn-success btn-sm">
+                                <i class="bi bi-plus-circle"></i> Add Stock
+                            </button>
+
+                            <!-- Back Button -->
+                            <a href="{% url 'inventory_dashboard' %}" class="btn btn-secondary btn-sm">
+                                <i class="bi bi-arrow-left"></i> Back to Dashboard
+                            </a>
+                        </div>
+
+                        <!-- Success Message Placeholder -->
+                        <div id="successMessage" class="alert alert-success mt-3 d-none">
+                            ✅ Stock successfully added!
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="text-center mt-4">
+    <p class="text-muted small mb-0">
+        &copy; {{ year|default:2025 }} Inventory Management System - All Rights Reserved
+    </p>
+</footer>
+
+<script>
+    function formatNumber(num) {
+        return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function calculateTotals() {
+        const unitCost = parseFloat(document.getElementById('unit_cost').value) || 0;
+        const qty = parseFloat(document.getElementById('qty').value) || 0;
+        const totalBeforeVAT = unitCost * qty;
+        const vat = totalBeforeVAT * 0.15;
+        const totalAfterVAT = totalBeforeVAT + vat;
+
+        document.getElementById('total_before_vat').value = formatNumber(totalBeforeVAT);
+        document.getElementById('vat').value = formatNumber(vat);
+        document.getElementById('total_after_vat').value = formatNumber(totalAfterVAT);
+    }
+
+    // Show success message when Add Stock is clicked
+    document.getElementById("stockForm").addEventListener("submit", function(event) {
+        event.preventDefault(); // Prevent actual form submission for now
+        document.getElementById("successMessage").classList.remove("d-none");
+        setTimeout(() => {
+            document.getElementById("successMessage").classList.add("d-none");
+        }, 4000);
+        this.reset(); // Reset the form fields
+    });
+</script>
+
+<style>
+    .report-header {
+        background: linear-gradient(90deg, #007bff, #00c6ff);
+        color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+    }
+    .card {
+        border-radius: 8px;
+    }
+    footer {
+        background-color: #f8f9fa;
+        padding: 8px;
+        border-top: 1px solid #ddd;
+        border-radius: 0.5rem;
+        margin-top: 20px;
+    }
+  
+    body, .form-control, .form-label, .btn {
+        font-size: 10px !important;
+    }
+    .card {
+        border-radius: 0.5rem;
+    }
+    footer {
+        background-color: #f8f9fa;
+        padding: 8px;
+        border-top: 1px solid #ddd;
+        border-radius: 0.5rem;
+        margin-top: 20px;
+    }
+
+</style>
+{% endblock %}
